@@ -57,7 +57,7 @@ The following is the js library for widget integration
 If you want to update their version or extend other plug-ins, please compile them yourself
 
 ## Screenshot
-![img.png](/Users/walirt/Projects/django_bpmn_widget/screenshot/img.png)
+![img.png](https://github.com/walirt/django-bpmn-widget/blob/main/screenshot/img.png?raw=true)
 
 
 ## Reference
