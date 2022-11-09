@@ -1,4 +1,4 @@
-# django-bpmn-widget
+# django-bpmn-widget ![](https://img.shields.io/badge/language-Python3-brightgreen.svg)
 django bpmn modeler widget(integrated with properties panel)
 
 ## Usage
@@ -63,3 +63,7 @@ If you want to update their version or extend other plug-ins, please compile the
 ## Reference
 [bpmn-js](https://github.com/bpmn-io/bpmn-js)  
 [django-bpmn](https://github.com/jplobianco/django-bpmn)  
+
+
+# License
+![](https://img.shields.io/badge/License-MIT-blue.svg)
