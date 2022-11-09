@@ -1,9 +1,13 @@
 from setuptools import setup
 
+readme = open('README.md').read()
+
 setup(
     name="django-bpmn-widget",
-    version="0.0.1",
+    version="1.0.0",
     description="django bpmn modeler widget(integrated with properties panel)",
+    long_description=readme,
+    long_description_content_type="text/markdown",
     url="https://github.com/walirt/django-bpmn-widget",
     author="walirt",
     author_email="610577219@qq.com",
