@@ -1,0 +1,166 @@
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}{% include "django/forms/widgets/attrs.html" %} style="display: none;">
+<div id="container-{{ widget.name|safe }}" class="bpmn-container">
+    <div id="canvas-{{ widget.name|safe }}" class="bpmn-canvas"></div>
+    <div id="properties-panel-{{ widget.name|safe }}" class="bpmn-properties-panel" ></div>
+</div>
+<ul class="buttons">
+<li>
+    Drop BPMN diagram from your desktop
+</li>
+<li>
+    <a id="export-diagram" href title="export BPMN diagram">
+    Export BPMN diagram
+    </a>
+</li>
+<li>
+    <a id="export-svg" href title="export BPMN SVG">
+    Export BPMN SVG
+    </a>
+</li>
+</ul>
+<style>
+    .bpmn-container {
+        position: relative;
+        display: flex;
+        height: 700px;
+    }
+    .bpmn-container .bpmn-canvas {
+        width: 75%;
+        border: 1px solid #000;
+    }
+    .bpmn-container .bpmn-properties-panel {
+        width: 25%;
+        border: 1px solid #000;
+    }
+    .bpmn-container .bpmn-canvas,
+    .bpmn-container .bpmn-properties-panel {
+        display: block;
+    }
+
+    /* overlay form.css style */
+   .bpmn-container label {
+        float: none;
+        width: auto;
+   }
+</style>
+<script>
+    // Prevent default submit event
+    document.querySelector('form:has(#container-content)').onsubmit = function(event) {
+         let name = event.submitter.getAttribute('name');
+         if(name !== '_save' && name !== '_addanother' && name !== '_continue' ) {
+             event.preventDefault();
+         }
+    };
+
+    let bpmnJS_{{ widget.name|safe }} = new bpmn.BpmnModeler({
+        container: '#canvas-{{ widget.name|safe }}',
+        keyboard: {
+            bindTo: window
+        },
+        propertiesPanel: {
+            parent: '#properties-panel-{{ widget.name|safe }}'
+        },
+        additionalModules: [
+            bpmn.BpmnPropertiesPanelModule,
+            bpmn.BpmnPropertiesProviderModule,
+            bpmn.CamundaPlatformPropertiesProviderModule
+      ],
+      moddleExtensions: {
+            camunda: bpmn.CamundaBpmnModdle
+      }
+    });
+
+    let empty_diagram = '<?xml version="1.0" encoding="UTF-8"?><definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL http://www.omg.org/spec/BPMN/2.0/20100501/BPMN20.xsd"><process id="Process_1ib5c06" /><bpmndi:BPMNDiagram id="sid-74620812-92c4-44e5-949c-aa47393d3830"><bpmndi:BPMNPlane id="sid-cdcae759-2af7-4a6d-bd02-53f3352a731d" bpmnElement="Process_1ib5c06" /><bpmndi:BPMNLabelStyle id="sid-e0502d32-f8d1-41cf-9c4a-cbb49fecf581"><omgdc:Font name="Arial" size="11" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" /></bpmndi:BPMNLabelStyle><bpmndi:BPMNLabelStyle id="sid-84cb49fd-2f7c-44fb-8950-83c3fa153d3b"><omgdc:Font name="Arial" size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" /></bpmndi:BPMNLabelStyle></bpmndi:BPMNDiagram></definitions>'
+    let diagram_{{ widget.name|safe }} = empty_diagram;
+    {% if widget.value %} diagram_{{ widget.name|safe }} = `{{ widget.value|safe|stringformat:'s' }}`; {% endif %}
+
+    // Open
+    async function openDiagram_{{ widget.name|safe }}(bpmnXML){
+        try{
+            await bpmnJS_{{ widget.name|safe }}.importXML(bpmnXML);
+
+            // access viewer components
+            let canvas_{{ widget.name|safe }} = bpmnJS_{{ widget.name|safe }}.get('canvas');
+
+            // zoom to fit full viewport
+            canvas_{{ widget.name|safe }}.zoom('fit-viewport');
+        } catch(err) {
+            console.error('open bpmn diagram error: ', err);
+        }
+    }
+
+    // Save
+    async function saveDiagram_{{ widget.name|safe }}(){
+        try{
+            let result = await bpmnJS_{{ widget.name|safe }}.saveXML({ format: false });
+            document.querySelector('#id_{{ widget.name|safe }}').value = result.xml;
+        } catch (err) {
+            console.error('save bpmn diagram error: ', err);
+        }
+    }
+
+    // Import
+    function registerFileDrop(container, callback) {
+          function handleFileSelect(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                let files = e.dataTransfer.files;
+                let file = files[0];
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let xml = e.target.result;
+                    callback(xml);
+                };
+                reader.readAsText(file);
+          }
+        
+          function handleDragOver(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+          }
+        
+          container.addEventListener('dragover', handleDragOver, false);
+          container.addEventListener('drop', handleFileSelect, false);
+    }
+    
+    // Check file api availability
+    if (!window.FileList || !window.FileReader) {
+        window.alert(
+    'Looks like you use an older browser that does not support drag and drop. ' +
+    'Try using Chrome, Firefox or the Internet Explorer > 10.');
+    } else {
+        let container = document.querySelector('#container-{{ widget.name|safe }}');
+        registerFileDrop(container,  openDiagram_{{ widget.name|safe }});
+    }
+
+    // Export
+    function setEncoded(link, name, data) {
+        let encodedData = encodeURIComponent(data);
+        if (data) {
+            link.classList.add('active');
+            link.setAttribute('href', 'data:application/bpmn20-xml;charset=UTF-8,' + encodedData);
+            link.setAttribute('download', name);
+        } else {
+            link.classList.remove('active');
+        }
+    }
+
+    async function exportArtifacts() {
+        let downloadLink = document.querySelector('#export-diagram');
+        let downloadSvgLink = document.querySelector('#export-svg');
+
+        let result = await bpmnJS_{{ widget.name|safe }}.saveXML({ format: true });
+        setEncoded(downloadLink, 'diagram.bpmn', result.xml);
+
+        let svgResult = await bpmnJS_{{ widget.name|safe }}.saveSVG();
+        setEncoded(downloadSvgLink, 'diagram.svg', svgResult.svg);
+    }
+
+    bpmnJS_{{ widget.name|safe }}.on('commandStack.changed', function (){
+        saveDiagram_{{ widget.name|safe }}();
+        exportArtifacts();
+    });
+
+    openDiagram_{{ widget.name|safe }}(diagram_{{ widget.name|safe }}).then(exportArtifacts);
+</script>
