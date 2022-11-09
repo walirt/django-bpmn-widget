@@ -30,7 +30,7 @@ class MyModelForm(forms.ModelForm):
     class Meta:
         model = MyModel
         widgets = {
-            'content': BPMNWidget() # Change it to the field you want to display
+            'content': BPMNWidget() # change it to the field you want to display
         }
         fields = '__all__'
 ```
