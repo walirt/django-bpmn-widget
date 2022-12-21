@@ -4,7 +4,7 @@ readme = open('README.md').read()
 
 setup(
     name="django-bpmn-widget",
-    version="1.0.0",
+    version="1.0.1",
     description="django bpmn modeler widget(integrated with properties panel)",
     long_description=readme,
     long_description_content_type="text/markdown",
